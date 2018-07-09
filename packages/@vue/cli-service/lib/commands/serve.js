@@ -84,12 +84,16 @@ module.exports = (api, options) => {
     // inject dev & hot-reload middleware entries
     if (!isProduction) {
       const publicOpt = projectDevServerOptions.public
-      const sockjsUrl = publicOpt ? `//${publicOpt}/sockjs-node` : url.format({
+      const [publicHost, publicPort] = (typeof publicOpt === 'string')
+        ? publicOpt.split(':', 2)
+        : ['', port]
+
+      const sockjsUrl = url.format({
         protocol,
-        port,
-        hostname: urls.lanUrlForConfig || 'localhost',
-        pathname: '/sockjs-node'
-      })
+        port: publicPort,
+        hostname: publicHost || urls.lanUrlForConfig || 'localhost',
+        pathname: path.posix.join(options.baseUrl || '/', 'sockjs-node')
+      }).replace(/https?/, '') // we don't really need protocol, just use // prefix
 
       const devClients = [
         // dev server client
