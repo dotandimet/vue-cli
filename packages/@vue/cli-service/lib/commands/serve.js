@@ -83,14 +83,18 @@ module.exports = (api, options) => {
 
     // inject dev & hot-reload middleware entries
     if (!isProduction) {
-      const publicOpt = projectDevServerOptions.public
-      const sockjsUrl = publicOpt ? `//${publicOpt}/sockjs-node` : url.format({
-        protocol,
-        port,
-        hostname: urls.lanUrlForConfig || 'localhost',
-        pathname: '/sockjs-node'
-      })
-
+      const publicOpt = projectDevServerOptions.public || ''
+      // devserver public option can include protocol
+      const publicUrl = (/^http/.test(publicOpt)) ? publicOpt : `http://${publicOpt}`
+      const sockjsUrl = url.format(
+        Object.assign(
+          url.parse(publicUrl), {
+            protocol,
+            port,
+            hostname: urls.lanUrlForConfig || 'localhost',
+            pathname: path.posix.join(options.baseUrl, 'sockjs-node')
+          }))
+      // process.stdout.write(`\n\n${sockjsUrl}\n\n`)
       const devClients = [
         // dev server client
         require.resolve(`webpack-dev-server/client`) + `?${sockjsUrl}`,
